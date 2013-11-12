@@ -162,13 +162,13 @@
             default:
                 break;
         }
-
+        
         [tmpText replaceCharactersInRange:range withString:@"%"];
         
         // If the hot character is not preceded by a alphanumeric characater, ie email (sebastien@world.com)
         if (range.location > 0 && [tmpText characterAtIndex:range.location - 1] != ' ')
             continue;
-
+        
         // Determine the length of the hot word
         int length = (int)range.length;
         
@@ -198,12 +198,12 @@
 - (void)determineLinks
 {
     NSMutableString *tmpText = [[NSMutableString alloc] initWithString:_cleanText];
-
+    
     // Define a character set for the complete world (determine the end of the hot word)
     NSMutableCharacterSet *validCharactersSet = [NSMutableCharacterSet alphanumericCharacterSet];
     [validCharactersSet removeCharactersInString:@"!@#$%^&*()-={[]}|;:',<>.?/"];
     [validCharactersSet addCharactersInString:@"!*'();:@&=+$,/?#[].-"];
-
+    
     NSMutableCharacterSet *invalidEndingCharacterSet = [NSMutableCharacterSet characterSetWithCharactersInString:@"!*'();:=+,#."];
     
     for (int index = 0; index < _validProtocols.count; index++)
@@ -223,7 +223,7 @@
             {
                 previousChar = [tmpText characterAtIndex:range.location - 1];
             }
-
+            
             // Determine the length of the hot word
             int length = (int)range.length;
             int occurences = 0;
@@ -259,7 +259,7 @@
             {
                 length--;
             }
-
+            
             // Register the hot word and its range
             [_rangesOfHotWords addObject:@{@"hotWord": @(STTweetLink), @"protocol": _validProtocols[index], @"range": [NSValue valueWithRange:NSMakeRange(range.location, length)]}];
         }
@@ -277,7 +277,16 @@
         
         STTweetHotWord hotWord = (STTweetHotWord)[[dictionary objectForKey:@"hotWord"] intValue];
         
-        [attributedString setAttributes:[self attributesForHotWord:hotWord] range:range];
+        NSString *hotWordString = [self.text substringWithRange:range];
+        if ([self.delegate respondsToSelector:@selector(shouldHighlightHotWord:)]) {
+            if ([self.delegate shouldHighlightHotWord:hotWordString]) {
+                [attributedString setAttributes:[self attributesForHotWord:hotWord] range:range];
+            }
+        }
+        else {
+            [attributedString setAttributes:[self attributesForHotWord:hotWord] range:range];
+        }
+        
     }
     
     [_textStorage appendAttributedString:attributedString];
@@ -285,7 +294,7 @@
     _textContainer = [[NSTextContainer alloc] initWithSize:CGSizeMake(self.frame.size.width, CGFLOAT_MAX)];
     [_layoutManager addTextContainer:_textContainer];
     [_textStorage addLayoutManager:_layoutManager];
-
+    
     if (_textView != nil)
     {
         [_textView removeFromSuperview];
@@ -338,7 +347,7 @@
     {
         return CGSizeZero;
     }
-
+    
     CGRect bounds = [_textStorage.attributedString boundingRectWithSize:CGSizeMake(width, CGFLOAT_MAX) options:NSStringDrawingUsesLineFragmentOrigin context:nil];
     
     return bounds.size;
@@ -375,7 +384,7 @@
     {
         [NSException raise:NSInvalidArgumentException format:@"Attributes dictionary must contains NSFontAttributeName and NSForegroundColorAttributeName"];
     }
-
+    
     _attributesText = attributes;
     
     [self determineHotWords];
@@ -450,7 +459,7 @@
 }
 
 - (BOOL)isLeftToRight
-{    
+{
     return _leftToRight;
 }
 
@@ -507,9 +516,9 @@
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
 {
     [super touchesEnded:touches withEvent:event];
-   
+    
     CGPoint touchLocation = [[touches anyObject] locationInView:self];
-
+    
     if (_isTouchesMoved)
     {
         UIMenuController *menuController = [UIMenuController sharedMenuController];
@@ -517,7 +526,7 @@
         [menuController setMenuVisible:YES animated:YES];
         
         [self becomeFirstResponder];
-
+        
         return;
     }
     
@@ -525,7 +534,7 @@
     {
         return;
     }
-
+    
     int charIndex = (int)[self charIndexAtLocation:[[touches anyObject] locationInView:_textView]];
     
     [_rangesOfHotWords enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {

@@ -12,8 +12,15 @@ typedef enum {
     STTweetLink
 } STTweetHotWord;
 
+@protocol STTweetLabelDelegate <NSObject>
+
+- (BOOL)shouldHighlightHotWord:(NSString *)hotWord;
+
+@end
+
 @interface STTweetLabel : UILabel
 
+@property (nonatomic, unsafe_unretained) id<STTweetLabelDelegate>delegate;
 @property (nonatomic, strong) NSArray *validProtocols;
 @property (nonatomic, assign) BOOL leftToRight;
 @property (nonatomic, assign) BOOL textSelectable;
