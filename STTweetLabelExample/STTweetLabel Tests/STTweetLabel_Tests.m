@@ -44,10 +44,8 @@
 {
     [_tweetLabel setText:text];
     NSArray *hotWords = [self hotWordsListForSampleText:text];
-
-//    NSLog(@"%@", hotWords);
     
-    XCTAssertEqual(results.count, hotWords.count, @"Number of hot words should be %d but %d was returned instead.", results.count, hotWords.count);
+    XCTAssertEqual(results.count, hotWords.count, @"Number of hot words should be %ld but %ld was returned instead.", results.count, hotWords.count);
     
     if (results.count == hotWords.count)
     {
@@ -106,20 +104,6 @@
     [_tweetLabel setAttributes:attributes hotWord:STTweetLink];
     
     XCTAssertEqualObjects(attributes, [_tweetLabel attributesForHotWord:STTweetLink], @"Link attributes should be %@ but %@ was returned instead.", attributes, [_tweetLabel attributesForHotWord:STTweetLink]);
-}
-
-- (void)test_setAndGetAttributesForText_setInvalidAttributes_exceptionThrown
-{
-    NSDictionary *attributes = @{NSForegroundColorAttributeName: [UIColor redColor]};
-    
-    XCTAssertThrowsSpecificNamed([_tweetLabel setAttributes:attributes], NSException, NSInvalidArgumentException, @"Attributes dictionary must contains NSFontAttributeName and NSForegroundColorAttributeName");
-}
-
-- (void)test_setAndGetAttributesForHandleHashtagLink_setInvalidAttributes_exceptionThrown
-{
-    NSDictionary *attributes = @{NSForegroundColorAttributeName: [UIColor redColor]};
-    
-    XCTAssertThrowsSpecificNamed([_tweetLabel setAttributes:attributes hotWord:0], NSException, NSInvalidArgumentException, @"Attributes dictionary must contains NSFontAttributeName and NSForegroundColorAttributeName");
 }
 
 - (void)test_setAndGetAttributesForText_setValidAttributes_exceptionNotThrown
@@ -246,6 +230,16 @@
     [self initiateTestFromSample:string results:results];
 }
 
+- (void)test_setTextAndGetHotWords_setTextWithOneDotAndHandle_hotWords
+{
+    NSString *string = @"This is a sample test. .@Ok";
+    NSArray *results = @[
+                         @{@"hotWord": @(STTweetHandle), @"range": [NSValue valueWithRange:NSMakeRange(24, 3)]}
+                         ];
+    
+    [self initiateTestFromSample:string results:results];
+}
+
 - (void)test_setTextAndGetHotWords_setTextWithOneLink_hotWords
 {
     NSString *string = @"This is a sample test with http://www.link.com/";
@@ -313,7 +307,7 @@
 {
     NSString *string = @"This is a sample test with http://www.link.com/directory/path/resources?timestamp=10303000&handle=dfhj[]";
     NSArray *results = @[
-                         @{@"hotWord": @(STTweetLink), @"range": [NSValue valueWithRange:NSMakeRange(27, 77)], @"protocol": @"http"}
+                         @{@"hotWord": @(STTweetLink), @"range": [NSValue valueWithRange:NSMakeRange(27, 75)], @"protocol": @"http"}
                          ];
     
     [self initiateTestFromSample:string results:results];
@@ -325,6 +319,32 @@
     NSArray *results = @[
                          @{@"hotWord": @(STTweetLink), @"range": [NSValue valueWithRange:NSMakeRange(28, 87)], @"protocol": @"http"}
                          ];
+    
+    [self initiateTestFromSample:string results:results];
+}
+
+- (void)test_setTextAndGetHotWords_setTextWithOneLinkWithNoProtocol_hotWords
+{
+    NSString *string = @"This is a sample test with www.example.com/something";
+    NSArray *results = @[
+                         @{@"hotWord": @(STTweetLink), @"range": [NSValue valueWithRange:NSMakeRange(27, 25)], @"protocol": @"http"}
+                         ];
+    [self initiateTestFromSample:string results:results];
+}
+
+- (void)test_setTextAndGetHotWords_setTextWithOnlyAtSymbol_hotWords
+{
+    NSString *string = @"@";
+    NSArray *results = nil;
+    
+    [self initiateTestFromSample:string results:results];
+}
+
+
+- (void)test_setTextAndGetHotWords_setTextWithOnlyHashtagSymbol_hotWords
+{
+    NSString *string = @"#";
+    NSArray *results = nil;
     
     [self initiateTestFromSample:string results:results];
 }
